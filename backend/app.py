@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask
 from flask_cors import CORS
 from routes.user_route import userRoute
 from routes.menu_route import menuRoute
@@ -17,7 +17,7 @@ jwt = JWTManager(app)
 
 @app.route('/')
 def home():
-    return jsonify({'msg':'Welcome to Cuisine Connect'})
+    return 'Welcome to Cuisine Connect'
 
 # Register blueprints for user, menu, and cart routes
 app.register_blueprint(userRoute, url_prefix="/user")
