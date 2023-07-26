@@ -1,38 +1,13 @@
 from flask import Blueprint, request, jsonify
 import bcrypt
 import jwt
+from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from configs.connection import get_db_connection
 from models.user_model import User
 
-
 userRoute = Blueprint("user", __name__)
 
-
-@userRoute.route("/")
-def user():
-    db = get_db_connection()
-
-    # Get the "email" query parameter from the request URL
-    # If the parameter is not provided, it will default to None
-    email_query = request.args.get("email")
-
-    # Build the query based on the "email" parameter
-    # If "email_query" is None, it won't filter by name
-    query = {}
-    if email_query is not None:
-        query["email"] = email_query
-
-    # Assuming "users" is the collection you want to retrieve data from
-    users = list(db.users.find(query))
-
-    # Assuming that each user document is serializable to JSON
-    serialized_users = [
-        {"name": user["name"], "email": user["email"]} for user in users
-    ]
-
-    return jsonify({"data": serialized_users})
-
-
+# User registration route
 @userRoute.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
@@ -64,6 +39,7 @@ def register():
     return jsonify({"message": f"Registration successful for email: {email}"})
 
 
+# User login route
 @userRoute.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -81,9 +57,24 @@ def login():
 
     if user and bcrypt.checkpw(password.encode("utf-8"), user["password"]):
         # Generate a JWT token upon successful login
-        token = jwt.encode({"email": user["email"]}, "abhijeet", algorithm="HS256")
+        token = create_access_token(identity=user["email"])
 
         return jsonify({"message": "Login successful!", "token": token})
 
     else:
         return jsonify({"message": "Invalid credentials. Please try again."})
+
+
+# Protected route that requires JWT authentication
+@userRoute.route("/protected", methods=["GET"])
+@jwt_required()
+def protected_route():
+    current_user_email = get_jwt_identity()
+    return jsonify({"message": f"Hello, {current_user_email}! You are in a protected route."})
+
+
+# Other routes...
+# ...
+
+# No need for the `initialize_jwt(app)` function here, as we are initializing JWTManager
+# directly in the main application file.

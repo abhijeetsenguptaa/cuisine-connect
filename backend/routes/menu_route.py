@@ -55,7 +55,7 @@ def insertItem():
     return jsonify({"msg": "Item has been added."})
 
 
-@menuRoute.route("/update/<item_id>", methods=["PUT"])
+@menuRoute.route("/update/<string:item_id>", methods=["PUT"])
 def updateMenuItem(item_id):
     data = request.get_json()
     name = data.get("name")
