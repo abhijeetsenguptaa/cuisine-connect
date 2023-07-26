@@ -12,13 +12,22 @@ def menu():
 
     menu_collection = db.menu
 
-    # Fetch all items from the "menu" collection
-    items = list(menu_collection.find())
+    # Get the query parameters from the request URL
+    _id = request.args.get("id")
+
+    # Build the query based on the provided parameters
+    query = {}
+    if _id:
+        query["_id"] = ObjectId(_id)  # Convert the _id string to a MongoDB ObjectId
+
+    # Fetch items from the "menu" collection based on the query
+    items = list(menu_collection.find(query))
 
     # Convert the MongoDB documents to a list of dictionaries
     menu_items = []
     for item in items:
         menu_item = {
+            "_id": str(item["_id"]),  # Convert ObjectId to a string
             "name": item["name"],
             "price": item["price"],
             "quantity": item["quantity"],

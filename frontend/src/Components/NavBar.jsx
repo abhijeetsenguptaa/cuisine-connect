@@ -2,14 +2,14 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 
-export default function NavBar({ onAddItems, onLogin, onSignUp }) {
+export default function NavBar({ onAddItems, onLogin, onSignUp, tailwindCSS }) {
     return (
         <div>
-            <ul className='flex gap-5 text-xl font-bold justify-end text-white m-3 mr-9'>
-                <li onClick={onAddItems}>Add Item</li>
-                <li onClick={onLogin}>Login</li>
-                <li onClick={onSignUp}>Sign up</li>
-                <li><Link to='/menu'>Menu</Link></li>
+            <ul className={tailwindCSS}>
+                <li onClick={onAddItems} className=' hover:cursor-pointer'>Add Item</li>
+                <li onClick={onLogin} className=' hover:cursor-pointer'>Login</li>
+                <li onClick={onSignUp} className=' hover:cursor-pointer'>Sign up</li>
+                <li className=' hover:cursor-pointer'><Link to='/menu'>Menu</Link></li>
             </ul>
         </div>
     )

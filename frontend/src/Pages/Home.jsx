@@ -1,80 +1,157 @@
-import React, { useState } from 'react';
-import NavBar from '../Components/NavBar';
+import React, { useState } from "react";
+import NavBar from "../Components/NavBar";
+import axios from "axios";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import LogoutButton from "../Components/LogoutButton";
+
+
 
 function Home() {
     const [showLogin, setShowLogin] = useState(false);
     const [showSignUp, setShowSignUp] = useState(false);
     const [showAddItems, setShowAddItems] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [item_name, setItem_Name] = useState('');
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [item_name, setItem_Name] = useState("");
     const [price, setPrice] = useState(0);
     const [quantity, setQuantity] = useState(1);
-    // const [itemsList, setItemsList] = useState([]);
-    const [availability, setAvailability] = useState('YES');
+    const [availability, setAvailability] = useState("YES");
+    const [imageURL, setImageURL] = useState("")
+    const [username, setUsername] = useState("")
+    const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem('token')); // Check if token is present
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        window.location.href = "/"
+        setLoggedIn(false);
+    };
 
     const handlePriceChange = (e) => {
-        setPrice(e.target.value)
-    }
+        setPrice(e.target.value);
+    };
 
+    const handleNameChange = (e) => {
+        setUsername(e.target.value);
+    };
 
     const handleQuantityChange = (e) => {
-        setQuantity(e.target.value)
-    }
-
+        setQuantity(e.target.value);
+    };
 
     const toggleLogin = () => {
         setShowLogin(!showLogin);
     };
 
-
     const toggleSignUp = () => {
-        setShowSignUp(!showSignUp)
-    }
+        setShowSignUp(!showSignUp);
+    };
 
     const toggleAddItems = () => {
-        setShowAddItems(!showAddItems)
-    }
+        setShowAddItems(!showAddItems);
+    };
 
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
     };
 
     const handleItemChange = (e) => {
-        setItem_Name(e.target.value)
-    }
+        setItem_Name(e.target.value);
+    };
+
     const handlePasswordChange = (e) => {
         setPassword(e.target.value);
     };
 
+    const handleImageUrlChange = (e) => {
+        setImageURL(e.target.value);
+    };
+
     const handleLogin = (e) => {
         e.preventDefault();
-        // Handle login logic here
-        console.log('Email:', email);
-        console.log('Password:', password);
-        // Clear form fields
-        setEmail('');
-        setPassword('');
+
+        let user = {
+            email: email,
+            password: password
+        }
+
+        axios
+            .post("http://localhost:8080/user/login", user)
+            .then((res) => {
+                if (res.data.message === "Login successful!") {
+                    toast.success(res.data.message);
+                    localStorage.setItem('token', res.data.token)
+                    setTimeout(()=>{
+                        window.location.href = "/menu"
+                    },2500)
+                } else {
+                    toast.error(res.data.message);
+                }
+            })
+            .catch((error) => {
+                toast.error("An error occurred while logging in. Please try again later.");
+            });
+
+        setEmail("");
+        setPassword("");
+    };
+
+    const handleRegister = (e) => {
+        e.preventDefault();
+
+        let user = {
+            name: username,
+            email: email,
+            password: password
+        }
+
+        axios
+            .post("http://localhost:8080/user/register", user)
+            .then((res) => {
+                toast.success(res.data.message);
+            })
+            .catch((error) => {
+                if (error.response && error.response.status === 409) {
+                    toast.error("User with this email already exists. Please use a different email.");
+                } else {
+                    toast.error("An error occurred while registering. Please try again later.");
+                }
+            });
+
+        setEmail("");
+        setPassword("");
     };
 
     const handleAddItems = (e) => {
         e.preventDefault();
         let items = {
-            'name': item_name,
-            'price': price,
-            'quantity': quantity,
-            'availability':availability
-        }
-        console.log(items);
-        setItem_Name('');
-        setPrice('0');
+            name: item_name,
+            price: price,
+            quantity: quantity,
+            availability: availability,
+            image: imageURL
+        };
+
+        axios
+            .post("http://localhost:8080/menu/insert", items)
+            .then((res) => toast.success(res.data.msg))
+            .catch((error) => toast.error("An error occurred while adding items. Please try again later."));
+        
+        setItem_Name("");
+        setPrice("0");
         setQuantity(1);
-        setAvailability('YES');
+        setAvailability("YES");
+        setImageURL("");
     };
 
     return (
         <div className="relative">
-            <NavBar onLogin={toggleLogin} onAddItems={toggleAddItems} onSignUp={toggleSignUp} />
+            <NavBar
+                onLogin={toggleLogin}
+                onAddItems={toggleAddItems}
+                onSignUp={toggleSignUp}
+                tailwindCSS={'flex gap-5 text-xl font-bold justify-end text-white m-3 mr-9'}
+            />
             <div
                 className="flex justify-center items-center bg-cover bg-center bg-no-repeat h-screen -mt-14"
                 style={{
@@ -142,7 +219,18 @@ function Home() {
                     <div className="bg-white p-4 rounded shadow-lg">
                         {/* Signup form */}
                         <h3 className="text-xl font-bold mb-4">Sign up</h3>
-                        <form onSubmit={handleLogin}>
+                        <form onSubmit={handleRegister}>
+                            <label htmlFor="name" className="block text-gray-700">
+                                Name:
+                            </label>
+                            <input
+                                type="name"
+                                id="name"
+                                value={username}
+                                onChange={handleNameChange}
+                                className="border p-2 w-full"
+                                required
+                            />
                             <label htmlFor="email" className="block text-gray-700">
                                 Email:
                             </label>
@@ -221,6 +309,16 @@ function Home() {
                                 className="border p-2 w-full"
                                 required
                             />
+                            <label htmlFor="name" className="block text-gray-700">
+                                Image URL:
+                            </label>
+                            <input
+                                type="url"
+                                value={imageURL}
+                                onChange={handleImageUrlChange}
+                                className="border p-2 w-full"
+                                required
+                            />
                             <select name="availability" className="text-gray-700">
                                 <option value="">Availability</option>
                                 <option value="YES">YES</option>
@@ -242,6 +340,22 @@ function Home() {
                     </div>
                 </div>
             )}
+            <div className='fixed bottom-2 right-2'>
+                {loggedIn && <LogoutButton handleLogout={handleLogout} />}
+            </div>
+
+            {/* Add the ToastContainer component here */}
+            <ToastContainer
+                position="top-right"
+                autoClose={2000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
         </div>
     );
 }
